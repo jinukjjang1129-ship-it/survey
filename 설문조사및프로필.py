@@ -3,11 +3,13 @@ import random
 import matplotlib.pyplot as plt
 
 import matplotlib as mpl
-import matplotlib.font_manager as fm
 from pathlib import Path
-FONT_PATH = r"C:\Users\jinuk\Freesentation-6SemiBold.ttf"
-FP = fm.FontProperties(fname=FONT_PATH)
+import matplotlib.font_manager as fm
 
+BASE_DIR = Path(__file__).resolve().parent
+FONT_PATH = BASE_DIR / "Freesentation-6SemiBold.ttf"
+
+FP = fm.FontProperties(fname=str(FONT_PATH))
 st.markdown("""
 <style>
 /* 설문 질문 글씨 */
