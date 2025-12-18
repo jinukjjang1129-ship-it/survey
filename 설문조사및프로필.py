@@ -5,8 +5,10 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.font_manager as fm
 from pathlib import Path
-FONT_PATH = r"C:\Users\jinuk\Freesentation-6SemiBold.ttf"
-FP = fm.FontProperties(fname=FONT_PATH)
+from matplotlib.font_manager import FontProperties
+
+FP = FontProperties(fname="Freesentation-6SemiBold.ttf")
+
 
 st.markdown("""
 <style>
