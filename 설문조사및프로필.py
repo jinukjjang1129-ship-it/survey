@@ -5,10 +5,8 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.font_manager as fm
 from pathlib import Path
-from matplotlib.font_manager import FontProperties
-
-FP = FontProperties(fname="Freesentation-6SemiBold.ttf")
-
+FONT_PATH = r"C:\Users\jinuk\Freesentation-6SemiBold.ttf"
+FP = fm.FontProperties(fname=FONT_PATH)
 
 st.markdown("""
 <style>
@@ -556,42 +554,211 @@ def render_result():
     # -----------------------------
     # 6) 사분면 (비율 기반)
     # -----------------------------
-    st.write("### 사분면")
-    fig, ax = plt.subplots(figsize=(6, 6))
+    st.write("애착 영역")
 
-    ax.axvline(50, linestyle="--", alpha=0.4, zorder=1)
-    ax.axhline(50, linestyle="--", alpha=0.4, zorder=1)
+    fig, ax = plt.subplots(figsize=(7, 4.2))
     ax.set_xlim(0, 100)
     ax.set_ylim(0, 100)
 
-    ax.set_title("사분면", fontproperties=FP, fontsize=20, fontweight="bold")
-    ax.set_xlabel("자기모형 비율 (Self+ 우세 %)", fontproperties=FP, fontsize=14)
-    ax.set_ylabel("타인모형 비율 (Other+ 우세 %)", fontproperties=FP, fontsize=14)
+    # (1) 바깥 테두리 / 눈금 제거
+    for spine in ax.spines.values():
+        spine.set_visible(False)
 
-    for label in ax.get_xticklabels() + ax.get_yticklabels():
-        label.set_fontproperties(FP)
+    ax.set_xticks([])
+    ax.set_yticks([])
 
+    # (2) 중앙 십자 축
+    ax.axvline(50, color="black", linewidth=2.0, zorder=1)
+    ax.axhline(50, color="black", linewidth=2.0, zorder=1)
+
+    # (3) 사분면 라벨
+    ax.text(
+        25, 75, "안정형",
+        ha="center", va="center",
+        fontproperties=FP, fontsize=16
+    )
+    ax.text(
+        75, 75, "의존형",
+        ha="center", va="center",
+        fontproperties=FP, fontsize=16
+    )
+    ax.text(
+        25, 25, "거부형",
+        ha="center", va="center",
+        fontproperties=FP, fontsize=16
+    )
+    ax.text(
+        75, 25, "회피형",
+        ha="center", va="center",
+        fontproperties=FP, fontsize=16
+    )
+
+    # (4) 축 설명 텍스트
+    ax.text(
+        -10, 50, "타인에\n대한\n생각",
+        ha="center", va="center",
+        fontproperties=FP, fontsize=18,
+        rotation=90
+    )
+
+    # y축 위/아래: 긍정/부정 (세로로)
+    ax.text(
+        -10, 92, "긍정적",
+        ha="center", va="center",
+        fontproperties=FP, fontsize=12,
+        rotation=90
+    )
+    ax.text(
+        -10, 8, "부정적",
+        ha="center", va="center",
+        fontproperties=FP, fontsize=12,
+        rotation=90
+    )
+
+    # 아래 가로: 자신에 대한 생각
+    ax.text(
+        50, -12, "자신에\n대한\n생각",
+        ha="center", va="center",
+        fontproperties=FP, fontsize=18
+    )
+
+    # x축 좌/우: 부정/긍정
+    ax.text(
+        8, -12, "부정적",
+        ha="left", va="center",
+        fontproperties=FP, fontsize=12
+    )
+    ax.text(
+        92, -12, "긍정적",
+        ha="right", va="center",
+        fontproperties=FP, fontsize=12
+    )
+    # (5) 사용자 위치 점
     ax.scatter(
         [self_model],
         [other_model],
-        s=220,
-        zorder=3,
+        s=260,
+        color="#F28C28",
         edgecolors="white",
-        linewidths=2
+        linewidths=2.5,
+        zorder=3
     )
 
+    plt.tight_layout()
     st.pyplot(fig)
 
-    # -----------------------------
-    # 7) 보조 지표
-    # -----------------------------
-    st.progress(int(to_pct(expression)))
-    st.write(f"억제 ↔ 표현(표현 점수): **{expression:.2f} / 7**")
 
-    st.progress(int(to_pct(efficacy)))
-    st.write(f"자기효능감: **{efficacy:.2f} / 7**")
+    # -----------------------------
+    # 7) 보조 지표 (양쪽 대비색 + 양쪽 %표시, 점수 문장 제거)
+    # -----------------------------
+    def score_to_pct_0_100(score_1_7: float) -> int:
+        # 1~7 -> 0~100
+        return int(round((score_1_7 - 1) / 6 * 100))
 
-    st.caption(f"참고) 재평가 점수: {reappraisal:.2f} / 7")
+    def draw_dual_bar(ax, pct_left, left_end_label, right_end_label, title, font_prop):
+        """
+        pct_left: 왼쪽(현재값) 퍼센트 0~100
+        오른쪽은 자동으로 100 - pct_left
+        """
+        pct_left = max(0, min(100, int(pct_left)))
+        pct_right = 100 - pct_left
+
+        ax.set_xlim(0, 100)
+        ax.set_ylim(0, 1)
+        ax.axis("off")
+
+        # 두께
+        bar_h = 0.42
+        y = 0.5
+
+        # 색(원하시면 여기만 바꿔서 테마 맞추면 됨)
+        left_color = "#F28C28"   # 주황 (채움)
+        right_color = "#D7EAF6"  # 대비되는 하늘색(나머지)
+
+        # 왼쪽/오른쪽 바(둘 다 채움)
+        ax.barh([y], [pct_left], height=bar_h, left=0, zorder=2, color=left_color)
+        ax.barh([y], [pct_right], height=bar_h, left=pct_left, zorder=1, color=right_color)
+
+        # 타이틀(위)
+        ax.text(
+            0, 1.05, title,
+            ha="left", va="bottom",
+            fontproperties=font_prop, fontsize=14
+        )
+
+        # 끝단 라벨(아래)
+        ax.text(
+            0, -0.15, left_end_label,
+            ha="left", va="top",
+            fontproperties=font_prop, fontsize=11
+        )
+        ax.text(
+            100, -0.15, right_end_label,
+            ha="right", va="top",
+            fontproperties=font_prop, fontsize=11
+        )
+
+        # 퍼센트 텍스트 (좌측/우측 모두)
+        # 왼쪽 퍼센트는 왼쪽 바 안에
+        if pct_left >= 10:
+            ax.text(
+                pct_left - 2, y, f"{pct_left}%",
+                ha="right", va="center",
+                fontproperties=font_prop, fontsize=13,
+                color="white", zorder=3
+            )
+        else:
+            ax.text(
+                pct_left + 2, y, f"{pct_left}%",
+                ha="left", va="center",
+                fontproperties=font_prop, fontsize=13,
+                color="black", zorder=3
+            )
+
+        # 오른쪽 퍼센트는 오른쪽 바 안에(우측 끝 기준)
+        if pct_right >= 10:
+            ax.text(
+                100 - 2, y, f"{pct_right}%",
+                ha="right", va="center",
+                fontproperties=font_prop, fontsize=13,
+                color="#2B2B2B", zorder=3
+            )
+        else:
+            ax.text(
+                pct_left + pct_right + 2, y, f"{pct_right}%",
+                ha="left", va="center",
+                fontproperties=font_prop, fontsize=13,
+                color="#2B2B2B", zorder=3
+            )
+
+    expr_pct = score_to_pct_0_100(expression)
+    eff_pct  = score_to_pct_0_100(efficacy)
+
+    # (A) 억제 ↔ 표현 (표현 점수 %)
+    fig1, ax1 = plt.subplots(figsize=(10, 1.5))
+    draw_dual_bar(
+        ax1,
+        pct_left=expr_pct,
+        left_end_label="억제",
+        right_end_label="표현",
+        title="억제 ↔ 표현 (표현 점수)",
+        font_prop=FP
+    )
+    st.pyplot(fig1)
+
+    # (B) 자기효능감 낮음 ↔ 높음
+    fig2, ax2 = plt.subplots(figsize=(10, 1.5))
+    draw_dual_bar(
+        ax2,
+        pct_left=eff_pct,
+        left_end_label="자기효능감 낮음",
+        right_end_label="자기효능감 높음",
+        title="자기효능감",
+        font_prop=FP
+    )
+    st.pyplot(fig2)
+
+ 
 
     # -----------------------------
     # 8) 버튼
